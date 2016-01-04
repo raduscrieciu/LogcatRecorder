@@ -9,23 +9,22 @@ import java.util.List;
 
 /**
  * Class used to capture the logcat output.
- * Contains a listener interface for the recording status
- * and a custom exception.
+ * Contains a listener interface for the recorder status.
  */
 public class LogcatRecorder {
 
     private Context context;
     private Process continuousLogging;
     private StringBuilder log;
-    private Boolean recording;
+    private boolean recording;
 
     private OnLogcatRecorderListener onLogcatRecorderListener;
 
     /**
-     * LogcatSpy constructor with a predefined OnLogcatSpyListener.
+     * LogcatSpy constructor with a predefined OnLogcatRecorderListener.
      *
-     * @param context             Context. Cannot be null.
-     * @param onLogcatRecorderListener OnLogcatSpyListener.
+     * @param context                  App Context.
+     * @param onLogcatRecorderListener OnLogcatRecorderListener to handle recorder states.
      */
     public LogcatRecorder(Context context, OnLogcatRecorderListener onLogcatRecorderListener) {
 
@@ -78,7 +77,7 @@ public class LogcatRecorder {
      * Start recording the log output with a specific filter.
      *
      * @param filter Log filter.
-     * @throws IllegalStateException when log recording is already in place.
+     * @throws IllegalStateException When log recording is already in place.
      */
     public void start(final String filter) throws IllegalStateException {
 
@@ -96,13 +95,15 @@ public class LogcatRecorder {
                     try {
                         continuousLogging = Runtime.getRuntime().exec("logcat -c");
                         if (filter != null && filter.length() > 0) {
+                            //Apply filter to logcat output.
                             continuousLogging = Runtime.getRuntime().exec("logcat | grep " + filter);
                         } else {
+                            //Get full logcat output.
                             continuousLogging = Runtime.getRuntime().exec("logcat");
                         }
 
                         BufferedReader bufferedReader = new BufferedReader(
-                                new InputStreamReader(continuousLogging.getInputStream()));
+                            new InputStreamReader(continuousLogging.getInputStream()));
 
                         while ((line = bufferedReader.readLine()) != null) {
                             log.append(line).append("\n");
@@ -124,7 +125,7 @@ public class LogcatRecorder {
     /**
      * Stops recording the log output.
      *
-     * @throws IllegalStateException when log recording has already been stopped.
+     * @throws IllegalStateException When log recording has already been stopped.
      */
     public void stop() throws IllegalStateException {
         if (recording) {
@@ -141,7 +142,7 @@ public class LogcatRecorder {
 
             recording = false;
         } else {
-            throw new IllegalStateException("Unable to call stop(): Currently not recording, start recording first.");
+            throw new IllegalStateException("Unable to call stop(): Currently not recording.");
         }
     }
 }
