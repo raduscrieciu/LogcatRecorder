@@ -10,9 +10,16 @@ public interface OnLogcatRecorderListener {
     void onStartRecording();
 
     /**
+     * Called when a new log entry is recorded.
+     *
+     * @param logEntry Log entry.
+     */
+    void onNewLogEntry(final String logEntry);
+
+    /**
      * Called when recording has stopped.
      *
      * @param log Returns the recorded log.
      */
-    void onStopRecording(String log);
+    void onStopRecording(final String log);
 }

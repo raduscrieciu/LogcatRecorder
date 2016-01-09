@@ -13,7 +13,6 @@ import java.util.List;
  */
 public class LogcatRecorder {
 
-    private Context context;
     private Process continuousLogging;
     private StringBuilder log;
     private boolean recording;
@@ -23,24 +22,21 @@ public class LogcatRecorder {
     /**
      * LogcatSpy constructor with a predefined OnLogcatRecorderListener.
      *
-     * @param context                  App Context.
      * @param onLogcatRecorderListener OnLogcatRecorderListener to handle recorder states.
      */
-    public LogcatRecorder(Context context, OnLogcatRecorderListener onLogcatRecorderListener) {
-
-        this.context = context;
+    public LogcatRecorder(OnLogcatRecorderListener onLogcatRecorderListener) {
         this.recording = false;
         this.onLogcatRecorderListener = onLogcatRecorderListener;
-
     }
 
     /**
      * Get the Process ID (PID) for a specific package name.
      *
      * @param packageName The app's package name.
+     * @param context     App Context.
      * @return The PID / 0 if the packageName is invalid or app isn't running.
      */
-    public int getPid(String packageName) {
+    public int getPid(String packageName, Context context) {
         int result = 0;
         ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
 
@@ -93,6 +89,7 @@ public class LogcatRecorder {
                     log = new StringBuilder();
                     String line;
                     try {
+                        //Clear all logcat entries, up until this point.
                         continuousLogging = Runtime.getRuntime().exec("logcat -c");
                         if (filter != null && filter.length() > 0) {
                             //Apply filter to logcat output.
@@ -102,11 +99,18 @@ public class LogcatRecorder {
                             continuousLogging = Runtime.getRuntime().exec("logcat");
                         }
 
+                        //Get the Runtime Process' output.
                         BufferedReader bufferedReader = new BufferedReader(
-                            new InputStreamReader(continuousLogging.getInputStream()));
+                                new InputStreamReader(continuousLogging.getInputStream()));
 
                         while ((line = bufferedReader.readLine()) != null) {
-                            log.append(line).append("\n");
+                            final String logEntry = line + "\n";
+
+                            log.append(logEntry);
+
+                            if (onLogcatRecorderListener != null) {
+                                onLogcatRecorderListener.onNewLogEntry(logEntry);
+                            }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -137,6 +141,7 @@ public class LogcatRecorder {
             }
 
             if (continuousLogging != null) {
+                //Kill the Runtime Process.
                 continuousLogging.destroy();
             }
 

@@ -22,15 +22,29 @@ public class MainActivity extends Activity {
         outputText = (TextView) findViewById(R.id.outputTextView);
 
         //Initialize the LogcatRecorder
-        logcatRecorder = new LogcatRecorder(this, new OnLogcatRecorderListener() {
+        logcatRecorder = new LogcatRecorder(new OnLogcatRecorderListener() {
             @Override
             public void onStartRecording() {
                 outputText.setText("");
+                Toast.makeText(MainActivity.this, "Recording logcat...", Toast.LENGTH_SHORT).show();
             }
 
             @Override
-            public void onStopRecording(String log) {
+            public void onNewLogEntry(final String logEntry) {
+
+                //Run on the main UI thread, since the call is made from a separate thread.
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        outputText.append(logEntry);
+                    }
+                });
+            }
+
+            @Override
+            public void onStopRecording(final String log) {
                 outputText.setText(log);
+                Toast.makeText(MainActivity.this, "Recording stopped...", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -41,7 +55,7 @@ public class MainActivity extends Activity {
                 if (isChecked) {
                     try {
                         //Start recording the logcat and filter it by the app's own PID.
-                        logcatRecorder.start(String.valueOf(logcatRecorder.getPid(getPackageName())));
+                        logcatRecorder.start(String.valueOf(logcatRecorder.getPid(getPackageName(), getApplicationContext())));
                     } catch (IllegalStateException e) {
                         e.printStackTrace();
                         Toast.makeText(MainActivity.this, "Already recording...", Toast.LENGTH_SHORT).show();
